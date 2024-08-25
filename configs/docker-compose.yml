@@ -1,6 +1,6 @@
 services:
   app:
-    container_name: app_container
+    container_name: app
     build:
       context: ../
       dockerfile: configs/Dockerfile
@@ -10,7 +10,7 @@ services:
       - postgres
 
   postgres:
-    container_name: postgres_container
+    container_name: postgres
     image: postgres:14.8-alpine3.18
     environment:
       POSTGRES_DB: ${DATABASE_DB}
@@ -23,6 +23,7 @@ services:
       - ${DATABASE_PORT}:${DATABASE_PORT}
 
   migrate:
+    container_name: migrations
     image: migrate/migrate
     depends_on:
       - postgres

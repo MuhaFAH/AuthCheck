@@ -6,9 +6,11 @@ import (
 	"github.com/MuhaFAH/AuthCheck/pkg/storage"
 	"github.com/MuhaFAH/AuthCheck/services"
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
+	"os"
 )
 
 type App struct {
@@ -29,7 +31,7 @@ func (app *App) IssuingTokensHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = storage.AddUser(models.User{GUID: userGUID, LastIP: userIP, HashedToken: hashedToken}, app.DB)
 	if err != nil {
-		if err := services.SendErrorResponse(w, "maybe invalid user id"); err != nil {
+		if err := services.SendErrorResponse(w, "invalid user guid"); err != nil {
 			log.Printf("error when sending error response: %s", err.Error())
 		}
 		return
@@ -41,6 +43,10 @@ func (app *App) IssuingTokensHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("error when loading .env file: %s", err.Error())
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	userGUID, userIP, err := services.GetRequestUserInfo(r)
 	if err != nil {
@@ -73,7 +79,7 @@ func (app *App) RefreshTokensHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	user.HashedToken = hashedToken
 	if user.LastIP != userIP {
-		err := services.SendEmail(models.Email{From: "test_sender@mail.ru", To: "test_user@gmail.ru"})
+		err := services.SendEmail(models.Email{From: os.Getenv("EMAIL_SENDER"), To: "test_user@gmail.ru"})
 		if err != nil {
 			log.Printf("error when send email: %s", err.Error())
 			return

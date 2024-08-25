@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/MuhaFAH/AuthCheck/pkg/models"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
@@ -111,4 +112,9 @@ func SendEmail(mail models.Email) error {
 		return err
 	}
 	return nil
+}
+
+func CheckGUID(guid string) bool {
+	_, err := uuid.Parse(guid)
+	return err == nil
 }

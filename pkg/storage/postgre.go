@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 	"github.com/MuhaFAH/AuthCheck/pkg/models"
+	"github.com/MuhaFAH/AuthCheck/services"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -29,7 +30,17 @@ func NewDB(cfg Config) (*sqlx.DB, error) {
 }
 
 func AddUser(u models.User, db *sqlx.DB) error {
-	query := "INSERT INTO users (user_id, last_ip, token_hash) VALUES (:user_id, :last_ip, :token_hash)"
+	if services.CheckGUID(u.GUID) != true {
+		return fmt.Errorf("user guid not valid", u.GUID)
+	}
+
+	var checkUserExist string
+	query := "SELECT user_id FROM users WHERE user_id = $1"
+	if err := db.Get(&checkUserExist, query, u.GUID); err == nil {
+		return fmt.Errorf("user %s already exists", u.GUID)
+	}
+
+	query = "INSERT INTO users (user_id, last_ip, token_hash) VALUES (:user_id, :last_ip, :token_hash)"
 	_, err := db.NamedExec(query, u)
 	if err != nil {
 		return err
